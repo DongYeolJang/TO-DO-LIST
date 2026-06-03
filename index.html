@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WORK-OUT</title>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBcBYyMGSasS2cwETYpma4DHD5aDiOcNM",
+    authDomain: "work-out-8abe1.firebaseapp.com",
+    projectId: "work-out-8abe1",
+    storageBucket: "work-out-8abe1.firebasestorage.app",
+    messagingSenderId: "354292761145",
+    appId: "1:354292761145:web:8239a4d9ebfe190c6a43e8",
+    measurementId: "G-8JBGQFBJDP"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  window._db          = db;
+  window._fsCol       = collection;
+  window._fsAdd       = addDoc;
+  window._fsGet       = getDocs;
+  window._fsDel       = deleteDoc;
+  window._fsDoc       = doc;
+  window._fsOrderBy   = orderBy;
+  window._fsQuery     = query;
+
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Tesseract OCR (no AI required) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ══════════════════════════════════════════
+   THEME VARIABLES
+══════════════════════════════════════════ */
+:root {
+  --accent:       #3EC6A0;
+  --accent-light: #E8F8F3;
+  --accent-dark:  #2BA882;
+  --accent-2:     #3EC6A0;
+  --bg:           #F2F4F8;
+  --card:         #FFFFFF;
+  --text:         #1A1F2E;
+  --text-muted:   #8A93A8;
+  --border:       #E4E8F0;
+  --red:          #FF4D6D;
+  --blue:         #4A90D9;
+  --shadow:       0 2px 14px rgba(26,31,46,0.07);
+  --shadow-lg:    0 8px 32px rgba(26,31,46,0.12);
+  --radius:       18px;
+  --radius-sm:    11px;
+  --header-bg:    #FFFFFF;
+  --tab-active:   #1A1F2E;
+}
+
+/* ── THEME: Dark ── */
+body.theme-dark {
+  --bg:         #0F1117;
+  --card:       #1C2030;
+  --text:       #E8EBF2;
+  --text-muted: #5A6278;
+  --border:     #2A2F42;
+  --shadow:     0 2px 14px rgba(0,0,0,0.3);
+  --header-bg:  #1C2030;
+  --tab-active: #E8EBF2;
+}
+
+/* ── THEME: Ocean ── */
+body.theme-ocean {
+  --accent:       #2E86FF;
+  --accent-light: #E6F0FF;
+  --accent-dark:  #1A6FD9;
+  --bg:           #EEF3FB;
+  --card:         #FFFFFF;
+  --text:         #0D1B3E;
+  --text-muted:   #7A8BAF;
+  --border:       #D6E3F5;
+}
+
+/* ── THEME: Fire ── */
+body.theme-fire {
+  --accent:       #FF5722;
+  --accent-light: #FFF0EB;
+  --accent-dark:  #E04010;
+  --bg:           #FBF0EE;
+  --card:         #FFFFFF;
+  --text:         #2D0A00;
+  --text-muted:   #A0695E;
+  --border:       #F5D8D2;
+}
+
+/* ── THEME: Violet ── */
+body.theme-violet {
+  --accent:       #7C4DFF;
+  --accent-light: #F0EBFF;
+  --accent-dark:  #6236D9;
+  --bg:           #F3F0FF;
+  --card:         #FFFFFF;
+  --text:         #1A0A3D;
+  --text-muted:   #8A7AAF;
+  --border:       #E0D8F5;
+}
+
+/* ── THEME: Midnight (Dark + Violet) ── */
+body.theme-midnight {
+  --accent:       #9B6DFF;
+  --accent-light: #2A1F4A;
+  --accent-dark:  #7C4DFF;
+  --bg:           #080B12;
+  --card:         #131826;
+  --text:         #DDD8F5;
+  --text-muted:   #5A5275;
+  --border:       #232040;
+  --shadow:       0 2px 14px rgba(0,0,0,0.5);
+  --header-bg:    #131826;
+  --tab-active:   #DDD8F5;
+}
+
+/* ══════════════════════════════════════════
+   BASE
+══════════════════════════════════════════ */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  transition: background 0.35s, color 0.35s;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--header-bg);
+  padding: 52px 20px 0;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background 0.35s;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 2px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logo-dot { color: var(--accent); }
+
+/* ── TABS ── */
+.tab-bar {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex: none;
+  background: none;
+  border: none;
+  padding: 12px 14px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.tab-btn.active {
+  color: var(--tab-active);
+  font-weight: 700;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 60%; height: 2.5px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ── CONTENT ── */
+.tab-content {
+  display: none;
+  padding: 20px 16px 100px;
+  animation: fadeUp 0.22s ease;
+}
+.tab-content.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  transition: background 0.35s;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── STAT GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px 10px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, background 0.35s;
+}
+.stat-card.selected { border-color: var(--accent); }
+.stat-card:active   { transform: scale(0.97); }
+
+.stat-label { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+
+.stat-value {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.stat-value span { font-size: 13px; font-weight: 500; }
+
+.stat-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* ── CHART ── */
+.chart-wrapper { position: relative; height: 180px; }
+
+/* ── DETAIL ── */
+.detail-date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+
+.date-nav-btn {
+  background: none; border: none;
+  font-size: 20px; cursor: pointer;
+  padding: 2px 8px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.date-nav-btn:hover { color: var(--accent); }
+
+.score-row {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.score-ring-wrap { display: flex; align-items: center; gap: 14px; }
+.score-ring { position: relative; width: 66px; height: 66px; }
+.score-ring svg { transform: rotate(-90deg); }
+.score-ring-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px; font-weight: 800;
+  color: var(--text);
+}
+.score-big {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 38px; font-weight: 800;
+}
+.score-unit { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+
+.seg-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 14px;
+}
+.seg-btn {
+  flex: 1; padding: 9px;
+  border: none; border-radius: 8px;
+  background: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; color: var(--text-muted);
+  transition: all 0.2s;
+}
+.seg-btn.active {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+.radar-wrapper { position: relative; height: 240px; display: flex; justify-content: center; }
+
+.body-parts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+.body-part-item {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: background 0.35s;
+}
+.bp-label { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; }
+.bp-value { font-size: 14px; font-weight: 700; color: var(--accent); }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.detail-stat {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  transition: background 0.35s;
+}
+.ds-label { font-size: 10px; color: var(--text-muted); margin-bottom: 5px; }
+.ds-value { font-family: 'DM Sans', sans-serif; font-size: 19px; font-weight: 700; }
+.ds-unit { font-size: 11px; color: var(--text-muted); font-weight: 400; font-family: 'Noto Sans KR'; }
+.ds-range { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.progress-wrap { background: var(--border); border-radius: 4px; height: 4px; margin-top: 7px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.6s ease; }
+
+.bmi-badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+.bmi-normal { background: var(--accent-light); color: var(--accent-dark); }
+.bmi-over   { background: #FFF0E8; color: #E07030; }
+.bmi-under  { background: #E8F0FF; color: var(--blue); }
+
+.visceral-bar { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.visceral-num { font-family: 'DM Sans', sans-serif; font-size: 30px; font-weight: 800; min-width: 36px; }
+.visceral-scale { flex: 1; }
+.visceral-track {
+  height: 7px; border-radius: 4px;
+  background: linear-gradient(to right, #3EC6A0 0%, #3EC6A0 40%, #F5C843 40%, #F5C843 70%, #FF4D6D 70%);
+  position: relative; margin-bottom: 4px;
+}
+.visceral-marker {
+  position: absolute; top: -4px;
+  width: 15px; height: 15px;
+  background: var(--card); border: 3px solid var(--text); border-radius: 50%;
+  transform: translateX(-50%);
+  transition: background 0.35s;
+}
+.visceral-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); }
+
+/* ── CHANGE ── */
+.change-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 18px 14px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  transition: background 0.35s;
+}
+.change-title { font-size: 14px; font-weight: 700; }
+.change-unit  { font-size: 11px; color: var(--text-muted); }
+.change-chart-wrap { position: relative; height: 150px; margin-top: 14px; }
+
+/* ── INPUT ── */
+.upload-zone {
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--accent-light);
+  transition: background 0.2s;
+  margin-bottom: 14px;
+}
+.upload-zone:hover { opacity: 0.85; }
+.upload-icon { font-size: 38px; margin-bottom: 8px; }
+.upload-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: var(--text-muted); }
+#fileInput { display: none; }
+
+.img-preview {
+  width: 100%; border-radius: var(--radius);
+  max-height: 260px; object-fit: contain;
+  margin-bottom: 14px; display: none;
+  box-shadow: var(--shadow);
+}
+
+/* OCR status */
+.ocr-status {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  display: none;
+  transition: background 0.35s;
+}
+.ocr-status.visible { display: block; }
+.ocr-progress-bar { background: var(--border); border-radius: 4px; height: 6px; margin: 8px 0 6px; overflow: hidden; }
+.ocr-progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.ocr-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.ocr-sub   { font-size: 11px; color: var(--text-muted); }
+
+/* Form */
+.form-section-title {
+  font-size: 14px; font-weight: 700;
+  margin: 18px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid var(--border);
+  color: var(--text);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-group { margin-bottom: 10px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; }
+.form-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, background 0.35s, color 0.35s;
+}
+.form-input:focus { border-color: var(--accent); }
+
+.btn-primary {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  margin-top: 8px;
+}
+.btn-primary:active  { transform: scale(0.98); background: var(--accent-dark); }
+.btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+.btn-secondary {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+/* OCR result highlight */
+.form-input.ocr-filled {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* ── SETTINGS ── */
+.settings-section { margin-bottom: 22px; }
+.settings-section-title {
+  font-size: 11px; font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+.theme-item {
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  border: 2.5px solid transparent;
+  transition: border-color 0.2s, transform 0.15s;
+  box-shadow: var(--shadow);
+}
+.theme-item:active { transform: scale(0.96); }
+.theme-item.active { border-color: var(--accent); }
+
+.theme-swatch {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+  position: relative;
+  overflow: hidden;
+}
+.theme-swatch::before, .theme-swatch::after {
+  content: '';
+  position: absolute;
+  width: 50%; height: 100%;
+}
+.theme-swatch::before { left: 0; }
+.theme-swatch::after  { right: 0; }
+
+.theme-label { font-size: 11px; font-weight: 600; color: var(--text); }
+
+/* Swatches */
+.sw-green::before  { background: #F2F4F8; } .sw-green::after  { background: #3EC6A0; }
+.sw-dark::before   { background: #1C2030; } .sw-dark::after   { background: #3EC6A0; }
+.sw-ocean::before  { background: #EEF3FB; } .sw-ocean::after  { background: #2E86FF; }
+.sw-fire::before   { background: #FBF0EE; } .sw-fire::after   { background: #FF5722; }
+.sw-violet::before { background: #F3F0FF; } .sw-violet::after { background: #7C4DFF; }
+.sw-mid::before    { background: #080B12; } .sw-mid::after    { background: #9B6DFF; }
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  transition: background 0.35s;
+}
+.settings-row-label { font-size: 14px; font-weight: 600; }
+.settings-row-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.app-version {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 24px;
+  padding-bottom: 20px;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 11px 22px;
+  border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 999;
+  white-space: nowrap;
+  max-width: 90%;
+  text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── EMPTY ── */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty-icon  { font-size: 46px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.empty-sub   { font-size: 13px; }
+
+/* ── LOADING ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+}
+.loading-overlay.visible { display: flex; }
+.loading-spinner {
+  width: 46px; height: 46px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; font-weight: 600; color: #fff; }
+
+/* ── DELETE BTN ── */
+.delete-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.delete-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body class="theme-green">
+
+<!-- ═══════════════════════════════════════
+     HEADER
+═══════════════════════════════════════ -->
+<header class="app-header">
+  <div class="header-top">
+    <div class="logo">WORK<span class="logo-dot">-</span>OUT</div>
+    <div style="font-size:11px;color:var(--text-muted);font-weight:600;" id="recordCount">기록 0개</div>
+  </div>
+  <nav class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('dashboard')">대시보드</button>
+    <button class="tab-btn" onclick="switchTab('detail')">상세</button>
+    <button class="tab-btn" onclick="switchTab('change')">변화</button>
+    <button class="tab-btn" onclick="switchTab('input')">정보입력</button>
+    <button class="tab-btn" onclick="switchTab('settings')">설정</button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════════════
+     DASHBOARD
+═══════════════════════════════════════ -->
+<div id="tab-dashboard" class="tab-content active">
+  <h2 style="font-size:17px;font-weight:700;margin-bottom:14px;">체성분 요약</h2>
+
+  <div class="stat-grid" id="dashStatGrid">
+    <div class="stat-card selected" onclick="selectDashStat(this,'skeletal_muscle','골격근량','kg')">
+      <div class="stat-label">골격근량 (kg)</div>
+      <div class="stat-value" id="dash-sm">—</div>
+      <div class="stat-badge">표준</div>
+    </div>
+    <div class="stat-card" onclick="selectDashStat(this,'body_fat_kg','체지방량','kg')">
+      <div class="stat-label">체지방량 (kg)</div>
+      <div class="stat-value" id="dash-bf">—</div>
+      <div class="stat-badge">표준</div>
+    </div>
+    <div class="stat-card" onclick="selectDashStat(this,'body_fat_pct','체지방률','%')">
+      <div class="stat-label">체지방률 (%)</div>
+      <div class="stat-value" id="dash-bfp">—</div>
+      <div class="stat-badge">표준</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chart-wrapper">
+      <canvas id="dashChart"></canvas>
+    </div>
+  </div>
+
+  <button class="btn-primary" style="margin-top:0;" onclick="switchTab('input')">＋ 검사기록 추가</button>
+  <button class="btn-secondary" onclick="loadSampleData()">샘플 데이터 불러오기</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DETAIL
+═══════════════════════════════════════ -->
+<div id="tab-detail" class="tab-content">
+  <div class="detail-date-nav">
+    <button class="date-nav-btn" onclick="navigateRecord(-1)">‹</button>
+    <span style="font-size:13px;font-weight:700;" id="detailDate">기록 없음</span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button class="date-nav-btn" onclick="navigateRecord(1)">›</button>
+      <button class="delete-btn" onclick="deleteCurrentRecord()">🗑</button>
+    </div>
+  </div>
+  <div id="detailContent">
+    <div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">검사 기록이 없습니다</div>
+      <div class="empty-sub">정보입력 탭에서 데이터를 추가해보세요</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CHANGE
+═══════════════════════════════════════ -->
+<div id="tab-change" class="tab-content">
+  <div id="changeContent">
+    <div class="empty-state">
+      <div class="empty-icon">📈</div>
+      <div class="empty-title">변화 데이터가 없습니다</div>
+      <div class="empty-sub">2개 이상의 기록이 필요합니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     INPUT
+═══════════════════════════════════════ -->
+<div id="tab-input" class="tab-content">
+
+  <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📷</div>
+    <div class="upload-title">인바디 결과지 사진 업로드</div>
+    <div class="upload-sub">사진을 올리면 OCR로 수치를 자동 인식합니다</div>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)">
+  <img id="imgPreview" class="img-preview" alt="미리보기">
+
+  <!-- OCR 진행상태 -->
+  <div class="ocr-status" id="ocrStatus">
+    <div class="ocr-title" id="ocrTitle">🔍 OCR 분석 중...</div>
+    <div class="ocr-progress-bar">
+      <div class="ocr-progress-fill" id="ocrProgress"></div>
+    </div>
+    <div class="ocr-sub" id="ocrSub">이미지에서 텍스트를 인식하고 있습니다</div>
+  </div>
+
+  <div id="inputFormCard" class="card">
+    <div class="form-section-title">📅 검사 정보</div>
+    <div class="form-group">
+      <label class="form-label">검사일시</label>
+      <input class="form-input" type="datetime-local" id="f_date">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">신장 (cm)</label>
+        <input class="form-input" type="number" id="f_height" placeholder="178">
+      </div>
+      <div class="form-group">
+        <label class="form-label">체중 (kg)</label>
+        <input class="form-input" type="number" id="f_weight" placeholder="74.9">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">나이</label>
+        <input class="form-input" type="number" id="f_age" placeholder="26">
+      </div>
+      <div class="form-group">
+        <label class="form-label">성별</label>
+        <select class="form-input" id="f_gender">
+          <option value="남성">남성</option>
+          <option value="여성">여성</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section-title">💪 체성분 분석</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">체수분 (L)</label>
+        <input class="form-input" type="number" id="f_water" placeholder="45.9">
+      </div>
+      <div class="form-group">
+        <label class="form-label">단백질 (kg)</label>
+        <input class="form-input" type="number" id="f_protein" placeholder="12.6">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">무기질 (kg)</label>
+        <input class="form-input" type="number" id="f_mineral" placeholder="4.15">
+      </div>
+      <div class="form-group">
+        <label class="form-label">체지방량 (kg)</label>
+        <input class="form-input" type="number" id="f_body_fat_kg" placeholder="12.3">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">골격근량 (kg)</label>
+        <input class="form-input" type="number" id="f_skeletal_muscle" placeholder="35.6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">체지방률 (%)</label>
+        <input class="form-input" type="number" id="f_body_fat_pct" placeholder="16.4">
+      </div>
+    </div>
+
+    <div class="form-section-title">📊 비만·연구 지표</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">BMI (kg/m²)</label>
+        <input class="form-input" type="number" id="f_bmi" placeholder="23.6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">인바디점수</label>
+        <input class="form-input" type="number" id="f_score" placeholder="82">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">기초대사량 (kcal)</label>
+        <input class="form-input" type="number" id="f_bmr" placeholder="1723">
+      </div>
+      <div class="form-group">
+        <label class="form-label">내장지방레벨</label>
+        <input class="form-input" type="number" id="f_visceral" placeholder="4">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">복부지방률</label>
+        <input class="form-input" type="number" id="f_whr" placeholder="0.83">
+      </div>
+      <div class="form-group">
+        <label class="form-label">비만도 (%)</label>
+        <input class="form-input" type="number" id="f_obesity" placeholder="107">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">권장섭취열량 (kcal)</label>
+        <input class="form-input" type="number" id="f_rec_cal" placeholder="2803">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="saveRecord()">💾 저장하기</button>
+    <button class="btn-secondary" onclick="clearForm()">✕ 초기화</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SETTINGS
+═══════════════════════════════════════ -->
+<div id="tab-settings" class="tab-content">
+
+  <div class="settings-section">
+    <div class="settings-section-title">테마 선택</div>
+    <div class="theme-grid">
+      <div class="theme-item active" id="theme-green" onclick="applyTheme('green')">
+        <div class="theme-swatch sw-green"></div>
+        <div class="theme-label">그린 (기본)</div>
+      </div>
+      <div class="theme-item" id="theme-dark" onclick="applyTheme('dark')">
+        <div class="theme-swatch sw-dark"></div>
+        <div class="theme-label">다크</div>
+      </div>
+      <div class="theme-item" id="theme-ocean" onclick="applyTheme('ocean')">
+        <div class="theme-swatch sw-ocean"></div>
+        <div class="theme-label">오션</div>
+      </div>
+      <div class="theme-item" id="theme-fire" onclick="applyTheme('fire')">
+        <div class="theme-swatch sw-fire"></div>
+        <div class="theme-label">파이어</div>
+      </div>
+      <div class="theme-item" id="theme-violet" onclick="applyTheme('violet')">
+        <div class="theme-swatch sw-violet"></div>
+        <div class="theme-label">바이올렛</div>
+      </div>
+      <div class="theme-item" id="theme-midnight" onclick="applyTheme('midnight')">
+        <div class="theme-swatch sw-mid"></div>
+        <div class="theme-label">미드나잇</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">데이터 관리</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Firebase 연결</div>
+        <div class="settings-row-sub" id="fbStatus">연결 확인 중...</div>
+      </div>
+      <div style="width:10px;height:10px;border-radius:50%;background:var(--text-muted);" id="fbDot"></div>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">전체 기록 수</div>
+        <div class="settings-row-sub" id="settingsRecordCount">0개</div>
+      </div>
+      <span style="font-size:20px;">📋</span>
+    </div>
+    <button class="btn-secondary" style="margin-top:0;" onclick="confirmClearAll()">⚠️ 모든 기록 삭제</button>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">앱 정보</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">WORK-OUT</div>
+        <div class="settings-row-sub">체성분 트래커</div>
+      </div>
+      <span style="font-size:11px;color:var(--text-muted);">v1.0.0</span>
+    </div>
+  </div>
+
+  <div class="app-version">Made with 💪 WORK-OUT App</div>
+</div>
+
+<!-- ── TOAST / LOADING ── -->
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">저장 중...</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+let records = [];
+let currentIdx = 0;
+let dashChart = null;
+let changeCharts = {};
+let dashKey = 'skeletal_muscle', dashLabel = '골격근량', dashUnit = 'kg';
+let firebaseOK = false;
+
+/* ─────────────────────────────────────────
+   FIREBASE
+───────────────────────────────────────── */
+window.addEventListener('firebaseReady', async () => {
+  firebaseOK = true;
+  document.getElementById('fbStatus').textContent = '연결됨 ✅';
+  document.getElementById('fbDot').style.background = '#3EC6A0';
+  await loadFromFirebase();
+});
+
+async function loadFromFirebase() {
+  try {
+    const q = window._fsQuery(
+      window._fsCol(window._db, 'inbody_records'),
+      window._fsOrderBy('date', 'asc')
+    );
+    const snap = await window._fsGet(q);
+    records = [];
+    snap.forEach(d => records.push({ id: d.id, ...d.data() }));
+    currentIdx = Math.max(0, records.length - 1);
+    updateAll();
+  } catch(e) {
+    console.warn('Firebase load error:', e);
+    document.getElementById('fbStatus').textContent = '연결 오류 ⚠️';
+    document.getElementById('fbDot').style.background = '#FF4D6D';
+    updateAll();
+  }
+}
+
+/* ─────────────────────────────────────────
+   TABS
+───────────────────────────────────────── */
+function switchTab(t) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  const tabs = ['dashboard','detail','change','input','settings'];
+  document.querySelectorAll('.tab-btn')[tabs.indexOf(t)].classList.add('active');
+  if (t === 'dashboard') renderDashboard();
+  if (t === 'detail')    renderDetail();
+  if (t === 'change')    renderChange();
+}
+
+/* ─────────────────────────────────────────
+   UPDATE ALL
+───────────────────────────────────────── */
+function updateAll() {
+  const n = records.length;
+  document.getElementById('recordCount').textContent = `기록 ${n}개`;
+  document.getElementById('settingsRecordCount').textContent = `${n}개`;
+  renderDashboard();
+  renderDetail();
+  renderChange();
+}
+
+/* ─────────────────────────────────────────
+   DASHBOARD
+───────────────────────────────────────── */
+function selectDashStat(el, key, label, unit) {
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  dashKey = key; dashLabel = label; dashUnit = unit;
+  renderDashChart();
+}
+
+function renderDashboard() {
+  if (!records.length) return;
+  const r = records[records.length - 1];
+  setVal('dash-sm',  r.skeletal_muscle);
+  setVal('dash-bf',  r.body_fat_kg);
+  setVal('dash-bfp', r.body_fat_pct);
+  renderDashChart();
+}
+
+function setVal(id, v) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!v && v !== 0) { el.textContent = '—'; return; }
+  const s = parseFloat(v).toFixed(1).split('.');
+  el.innerHTML = s[0] + '<span>.' + s[1] + '</span>';
+}
+
+function renderDashChart() {
+  const ctx = document.getElementById('dashChart').getContext('2d');
+  if (dashChart) dashChart.destroy();
+  if (!records.length) return;
+
+  const labels = records.map(r => fmtDateShort(r.date));
+  const data   = records.map(r => parseFloat(r[dashKey]) || null);
+  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+
+  dashChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: accent,
+        backgroundColor: accent + '18',
+        pointBackgroundColor: accent,
+        pointRadius: 5, pointHoverRadius: 7,
+        borderWidth: 2.5, tension: 0.3, fill: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1A1F2E',
+          callbacks: { label: c => ` ${c.parsed.y} ${dashUnit}` }
+        }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:10},color:'#8A93A8'} },
+        y: { grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:10},color:'#8A93A8'} }
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────────
+   DETAIL
+───────────────────────────────────────── */
+function navigateRecord(dir) {
+  if (!records.length) return;
+  currentIdx = Math.max(0, Math.min(records.length - 1, currentIdx + dir));
+  renderDetail();
+}
+
+function renderDetail() {
+  const el = document.getElementById('detailContent');
+  if (!records.length) {
+    document.getElementById('detailDate').textContent = '기록 없음';
+    el.innerHTML = emptyState('📊', '검사 기록이 없습니다', '정보입력 탭에서 추가해보세요');
+    return;
+  }
+  const r = records[currentIdx];
+  document.getElementById('detailDate').textContent = fmtDateFull(r.date);
+
+  const score = r.score || 0;
+  const arc   = Math.round((score / 100) * 251);
+  const bmiV  = parseFloat(r.bmi) || 0;
+  let bmiCls = 'bmi-normal', bmiTxt = '표준';
+  if (bmiV < 18.5) { bmiCls = 'bmi-under'; bmiTxt = '저체중'; }
+  else if (bmiV >= 25) { bmiCls = 'bmi-over'; bmiTxt = '과체중'; }
+
+  const viscV = parseFloat(r.visceral) || 0;
+  const visP  = Math.min((viscV / 20) * 100, 100);
+  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+
+  el.innerHTML = `
+  <div class="score-row">
+    <div>
+      <div style="font-size:14px;font-weight:700;">인바디점수</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">체성분 종합점수</div>
+    </div>
+    <div class="score-ring-wrap">
+      <div class="score-ring">
+        <svg width="66" height="66" viewBox="0 0 66 66">
+          <circle cx="33" cy="33" r="26" fill="none" stroke="var(--border)" stroke-width="6"/>
+          <circle cx="33" cy="33" r="26" fill="none" stroke="${accent}" stroke-width="6"
+            stroke-dasharray="${arc} 251" stroke-linecap="round"/>
+        </svg>
+        <div class="score-ring-num">${score}</div>
+      </div>
+      <div class="score-big">${score}<span class="score-unit">점</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">체성분 분석</div>
+    <div class="detail-grid">
+      ${dStat('체수분','L',r.water,'39.2~47.8')}
+      ${dStat('단백질','kg',r.protein,'10.5~12.9')}
+      ${dStat('무기질','kg',r.mineral,'3.63~4.43')}
+      ${dStat('체지방량','kg',r.body_fat_kg,'8.4~16.7')}
+      ${dStat('골격근량','kg',r.skeletal_muscle,'')}
+      ${dStat('체중','kg',r.weight,'59.2~80.2')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">비만 분석</div>
+    <div class="detail-grid">
+      <div class="detail-stat">
+        <div class="ds-label">BMI</div>
+        <div class="ds-value">${r.bmi||'—'} <span class="ds-unit">kg/m²</span></div>
+        <span class="bmi-badge ${bmiCls}">${bmiTxt}</span>
+      </div>
+      ${dStat('체지방률','%',r.body_fat_pct,'10~20')}
+      ${dStat('복부지방률','',r.whr,'~0.90')}
+      ${dStat('비만도','%',r.obesity,'90~110')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">내장지방레벨</div>
+    <div class="visceral-bar">
+      <div class="visceral-num">${viscV}</div>
+      <div class="visceral-scale">
+        <div class="visceral-track">
+          <div class="visceral-marker" style="left:${visP}%"></div>
+        </div>
+        <div class="visceral-labels"><span>낮음</span><span>10</span><span>높음</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">연구 지표</div>
+    <div class="detail-grid">
+      ${dStat('기초대사량','kcal',r.bmr,'1608~1883')}
+      ${dStat('권장섭취열량','kcal',r.rec_cal||r.recommended_calories,'')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">부위별 분석</div>
+    <div class="seg-toggle">
+      <button class="seg-btn active" onclick="toggleSeg(this,'muscle')">근육량</button>
+      <button class="seg-btn" onclick="toggleSeg(this,'fat')">체지방</button>
+    </div>
+    <div id="segMuscle">
+      <div class="radar-wrapper"><canvas id="radarChart"></canvas></div>
+      <div class="body-parts-grid">
+        ${bpItem('몸통')}${bpItem('왼팔')}${bpItem('오른팔')}${bpItem('왼다리')}${bpItem('오른다리')}
+      </div>
+    </div>
+    <div id="segFat" style="display:none;">
+      <div class="body-parts-grid">
+        ${bpItem('몸통')}${bpItem('왼팔')}${bpItem('오른팔')}${bpItem('왼다리')}${bpItem('오른다리')}
+      </div>
+    </div>
+  </div>`;
+
+  setTimeout(() => {
+    const rc = document.getElementById('radarChart');
+    if (!rc) return;
+    new Chart(rc.getContext('2d'), {
+      type: 'radar',
+      data: {
+        labels: ['몸통','왼팔','오른팔','오른다리','왼다리'],
+        datasets: [{
+          data: [100,100,100,100,100],
+          backgroundColor: accent + '30',
+          borderColor: accent,
+          pointBackgroundColor: accent,
+          borderWidth: 2, pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{ display:false } },
+        scales: {
+          r: {
+            beginAtZero:true, max:150, min:50,
+            ticks:{ display:false },
+            grid:{ color:'rgba(0,0,0,0.07)' },
+            pointLabels:{ font:{size:12}, color:'var(--text)' }
+          }
+        }
+      }
+    });
+  }, 80);
+}
+
+function dStat(label, unit, val, range) {
+  const v = parseFloat(val);
+  const rp = range ? range.split('~') : [];
+  let pct = 50;
+  if (rp.length === 2) {
+    const lo = parseFloat(rp[0]), hi = parseFloat(rp[1]);
+    pct = Math.min(Math.max(((v - lo) / (hi - lo)) * 100, 0), 100);
+  }
+  return `
+  <div class="detail-stat">
+    <div class="ds-label">${label}</div>
+    <div class="ds-value">${val||'—'} <span class="ds-unit">${unit}</span></div>
+    ${range ? `<div class="ds-range">정상범위 ${range}</div>
+    <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
+  </div>`;
+}
+
+function bpItem(label) {
+  return `<div class="body-part-item"><div class="bp-label">${label}</div><div class="bp-value">표준</div></div>`;
+}
+
+function toggleSeg(btn, type) {
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('segMuscle').style.display = type === 'muscle' ? 'block' : 'none';
+  document.getElementById('segFat').style.display    = type === 'fat'    ? 'block' : 'none';
+}
+
+/* ─────────────────────────────────────────
+   CHANGE
+───────────────────────────────────────── */
+function renderChange() {
+  const cont = document.getElementById('changeContent');
+  if (records.length < 2) {
+    cont.innerHTML = emptyState('📈','변화 데이터가 없습니다','2개 이상의 기록이 필요합니다');
+    return;
+  }
+  Object.values(changeCharts).forEach(c => c.destroy());
+  changeCharts = {};
+
+  const metrics = [
+    { key:'score',           label:'인바디점수',   unit:'점',    color:'#8A93A8' },
+    { key:'bmr',             label:'기초대사량',   unit:'kcal',  color:'#3EC6A0' },
+    { key:'weight',          label:'체중',         unit:'kg',    color:'#4A90D9' },
+    { key:'skeletal_muscle', label:'골격근량',     unit:'kg',    color:'#3EC6A0' },
+    { key:'body_fat_kg',     label:'체지방량',     unit:'kg',    color:'#FF4D6D' },
+    { key:'body_fat_pct',    label:'체지방률',     unit:'%',     color:'#FF8C42' },
+    { key:'bmi',             label:'BMI',          unit:'kg/m²', color:'#8A93A8' },
+    { key:'visceral',        label:'내장지방레벨', unit:'',      color:'#FF4D6D' },
+  ];
+
+  const labels = records.map(r => fmtDateShort(r.date));
+  cont.innerHTML = metrics.map((m,i) => `
+    <div class="change-card">
+      <div class="change-title">${m.label} <span class="change-unit">(${m.unit})</span></div>
+      <div class="change-chart-wrap"><canvas id="cc_${i}"></canvas></div>
+    </div>`).join('');
+
+  setTimeout(() => {
+    metrics.forEach((m,i) => {
+      const el = document.getElementById(`cc_${i}`);
+      if (!el) return;
+      const data = records.map(r => parseFloat(r[m.key]) || null);
+      changeCharts[i] = new Chart(el.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            borderColor: m.color,
+            backgroundColor: m.color + '15',
+            pointBackgroundColor: m.color,
+            pointRadius: 4, borderWidth: 2.5, tension: 0.3, fill: true
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1A1F2E',
+              callbacks: {
+                label: c => ` ${c.parsed.y} ${m.unit}`,
+                title: items => fmtDateFull(records[items[0].dataIndex].date)
+              }
+            }
+          },
+          scales: {
+            x: { grid:{display:false}, ticks:{font:{size:10},color:'#8A93A8'} },
+            y: { grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:10},color:'#8A93A8'} }
+          }
+        }
+      });
+    });
+  }, 50);
+}
+
+/* ─────────────────────────────────────────
+   OCR IMAGE UPLOAD (Tesseract — no AI)
+───────────────────────────────────────── */
+async function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const preview = document.getElementById('imgPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    await runOCR(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runOCR(imgSrc) {
+  const statusEl  = document.getElementById('ocrStatus');
+  const titleEl   = document.getElementById('ocrTitle');
+  const subEl     = document.getElementById('ocrSub');
+  const progEl    = document.getElementById('ocrProgress');
+
+  statusEl.classList.add('visible');
+  titleEl.textContent = '🔍 이미지 분석 중...';
+  subEl.textContent   = 'OCR로 텍스트를 인식하고 있습니다';
+  progEl.style.width  = '5%';
+
+  try {
+    const worker = await Tesseract.createWorker('kor+eng', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          progEl.style.width = Math.round(m.progress * 100) + '%';
+          subEl.textContent  = `인식 중... ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    });
+
+    const { data: { text } } = await worker.recognize(imgSrc);
+    await worker.terminate();
+
+    progEl.style.width = '100%';
+    titleEl.textContent = '✅ 텍스트 인식 완료';
+    subEl.textContent   = 'OCR 결과에서 수치를 추출합니다';
+
+    parseOCRText(text);
+
+    setTimeout(() => {
+      statusEl.classList.remove('visible');
+      showToast('OCR 완료! 값을 확인 후 저장해주세요');
+    }, 1500);
+
+  } catch(err) {
+    console.error('OCR error:', err);
+    titleEl.textContent = '⚠️ OCR 실패 - 직접 입력해주세요';
+    subEl.textContent   = err.message;
+    setTimeout(() => statusEl.classList.remove('visible'), 3000);
+  }
+}
+
+/* ─────────────────────────────────────────
+   OCR TEXT PARSER
+   인바디 결과지 패턴 매칭으로 수치 추출
+───────────────────────────────────────── */
+function parseOCRText(text) {
+  const t = text;
+  const filled = {};
+
+  // 날짜/시간 추출: 2026.05.24 16:57 또는 26.05.24 16:57
+  const dateM = t.match(/(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{2})\s+(\d{1,2}):(\d{2})/);
+  if (dateM) {
+    const [,yr,mo,dy,hh,mm] = dateM;
+    const year = yr.length === 2 ? '20'+yr : yr;
+    const iso = `${year}-${mo.padStart(2,'0')}-${dy.padStart(2,'0')}T${hh.padStart(2,'0')}:${mm}`;
+    fillField('f_date', iso, filled);
+  }
+
+  // 신장
+  const heightM = t.match(/신장\D{0,10}(\d{2,3})\s*cm/i) || t.match(/(\d{3})\s*cm/);
+  if (heightM) fillField('f_height', heightM[1], filled);
+
+  // 나이
+  const ageM = t.match(/나이\D{0,5}(\d{2})/i);
+  if (ageM) fillField('f_age', ageM[1], filled);
+
+  // 성별
+  if (/남성/.test(t)) document.getElementById('f_gender').value = '남성';
+  else if (/여성/.test(t)) document.getElementById('f_gender').value = '여성';
+
+  // 체중
+  const weightM = findValue(t, ['체중', '몸무게']) || t.match(/체중\D{0,3}(\d{2,3}\.?\d{0,1})/);
+  if (weightM) fillField('f_weight', typeof weightM === 'string' ? weightM : weightM[1], filled);
+
+  // 체수분
+  const waterM = findValue(t, ['체수분','체수']);
+  if (waterM) fillField('f_water', waterM, filled);
+
+  // 단백질
+  const proteinM = findValue(t, ['단백질']);
+  if (proteinM) fillField('f_protein', proteinM, filled);
+
+  // 무기질
+  const mineralM = findValue(t, ['무기질']);
+  if (mineralM) fillField('f_mineral', mineralM, filled);
+
+  // 체지방량 — kg 단위 먼저, 그 다음 % 단위
+  const bfkgM = findValue(t, ['체지방량']);
+  if (bfkgM) fillField('f_body_fat_kg', bfkgM, filled);
+
+  // 골격근량
+  const smM = findValue(t, ['골격근량','골격근']);
+  if (smM) fillField('f_skeletal_muscle', smM, filled);
+
+  // 체지방률
+  const bfpctM = findValue(t, ['체지방률','체지방율']);
+  if (bfpctM) fillField('f_body_fat_pct', bfpctM, filled);
+
+  // BMI
+  const bmiM = findValue(t, ['BMI','B M I','체질량지수']);
+  if (bmiM) fillField('f_bmi', bmiM, filled);
+
+  // 인바디점수
+  const scoreM = t.match(/(\d{2})\s*\/\s*100\s*점/) || t.match(/인바디점수\D{0,10}(\d{2})/);
+  if (scoreM) fillField('f_score', scoreM[1], filled);
+
+  // 기초대사량
+  const bmrM = findValue(t, ['기초대사량']);
+  if (bmrM) fillField('f_bmr', bmrM, filled);
+
+  // 내장지방레벨
+  const viscM = t.match(/내장지방\D{0,5}레벨\D{0,5}(\d{1,2})/) ||
+                t.match(/Visceral\D{0,10}(\d{1,2})/i);
+  if (viscM) fillField('f_visceral', viscM[1], filled);
+
+  // 복부지방률 (WHR)
+  const whrM = t.match(/복부지방률\D{0,5}(\d+\.\d+)/) ||
+               t.match(/Waist.Hip\D{0,5}(\d+\.\d+)/i) ||
+               t.match(/0\.\d{2}/);
+  if (whrM) fillField('f_whr', typeof whrM === 'object' && whrM[1] ? whrM[1] : whrM[0], filled);
+
+  // 비만도
+  const obesityM = t.match(/비만도\D{0,5}(\d{2,3})/) ||
+                   t.match(/Percent\s*Body\s*Fat\D{0,5}(\d{2,3})/i);
+  if (obesityM) fillField('f_obesity', obesityM[1], filled);
+
+  // 권장섭취열량
+  const recCalM = t.match(/권장섭취\D{0,5}(\d{3,4})/) ||
+                  t.match(/권장\D{0,10}(\d{4})\s*kcal/);
+  if (recCalM) fillField('f_rec_cal', recCalM[1], filled);
+
+  // 채워진 필드 하이라이트
+  Object.keys(filled).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('ocr-filled');
+      setTimeout(() => el.classList.remove('ocr-filled'), 5000);
+    }
+  });
+
+  const cnt = Object.keys(filled).length;
+  showToast(`OCR: ${cnt}개 항목 자동 입력됨`);
+}
+
+function findValue(text, keywords) {
+  for (const kw of keywords) {
+    // 키워드 뒤에 나오는 숫자 (소수점 포함) 추출
+    const re = new RegExp(kw + '[^\\d]{0,20}(\\d{1,4}\\.?\\d{0,2})', 'i');
+    const m = text.match(re);
+    if (m && m[1]) return m[1];
+  }
+  return null;
+}
+
+function fillField(id, val, filled) {
+  const el = document.getElementById(id);
+  if (!el || !val) return;
+  el.value = val;
+  filled[id] = true;
+}
+
+/* ─────────────────────────────────────────
+   SAVE
+───────────────────────────────────────── */
+async function saveRecord() {
+  const dateVal = document.getElementById('f_date').value;
+  if (!dateVal) { showToast('검사일시를 입력해주세요'); return; }
+
+  const g = id => document.getElementById(id);
+  const n = (id) => parseFloat(g(id).value) || null;
+  const ni = (id) => parseInt(g(id).value) || null;
+
+  const record = {
+    date:            dateVal,
+    height:          n('f_height'),
+    weight:          n('f_weight'),
+    age:             ni('f_age'),
+    gender:          g('f_gender').value,
+    water:           n('f_water'),
+    protein:         n('f_protein'),
+    mineral:         n('f_mineral'),
+    body_fat_kg:     n('f_body_fat_kg'),
+    skeletal_muscle: n('f_skeletal_muscle'),
+    body_fat_pct:    n('f_body_fat_pct'),
+    bmi:             n('f_bmi'),
+    score:           ni('f_score'),
+    bmr:             ni('f_bmr'),
+    visceral:        ni('f_visceral'),
+    whr:             n('f_whr'),
+    obesity:         n('f_obesity'),
+    rec_cal:         ni('f_rec_cal'),
+    createdAt:       new Date().toISOString()
+  };
+
+  showLoading('저장 중...');
+
+  try {
+    if (firebaseOK && window._db) {
+      const ref = await window._fsAdd(window._fsCol(window._db, 'inbody_records'), record);
+      record.id = ref.id;
+    }
+  } catch(e) { console.warn('Firebase save error:', e); }
+
+  records.push(record);
+  records.sort((a,b) => new Date(a.date) - new Date(b.date));
+  currentIdx = records.length - 1;
+
+  hideLoading();
+  updateAll();
+  clearForm();
+  showToast('저장 완료! ✅');
+  switchTab('dashboard');
+}
+
+/* ─────────────────────────────────────────
+   DELETE
+───────────────────────────────────────── */
+async function deleteCurrentRecord() {
+  if (!records.length) return;
+  if (!confirm('이 기록을 삭제할까요?')) return;
+  const rec = records[currentIdx];
+  try {
+    if (firebaseOK && window._db && rec.id && !rec.id.startsWith('sample_')) {
+      await window._fsDel(window._fsDoc(window._db, 'inbody_records', rec.id));
+    }
+  } catch(e) { console.warn(e); }
+  records.splice(currentIdx, 1);
+  currentIdx = Math.max(0, currentIdx - 1);
+  updateAll();
+  showToast('삭제됐습니다');
+}
+
+async function confirmClearAll() {
+  if (!confirm('모든 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  showLoading('삭제 중...');
+  try {
+    if (firebaseOK && window._db) {
+      const snap = await window._fsGet(window._fsCol(window._db, 'inbody_records'));
+      for (const d of snap.docs) {
+        await window._fsDel(window._fsDoc(window._db, 'inbody_records', d.id));
+      }
+    }
+  } catch(e) { console.warn(e); }
+  records = [];
+  currentIdx = 0;
+  hideLoading();
+  updateAll();
+  showToast('모든 기록이 삭제됐습니다');
+}
+
+/* ─────────────────────────────────────────
+   CLEAR FORM
+───────────────────────────────────────── */
+function clearForm() {
+  ['f_height','f_weight','f_age','f_water','f_protein','f_mineral',
+   'f_body_fat_kg','f_skeletal_muscle','f_body_fat_pct','f_bmi','f_score',
+   'f_bmr','f_visceral','f_whr','f_obesity','f_rec_cal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Reset date to now
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('f_date').value = now.toISOString().slice(0,16);
+
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+/* ─────────────────────────────────────────
+   THEME
+───────────────────────────────────────── */
+function applyTheme(name) {
+  const themes = ['green','dark','ocean','fire','violet','midnight'];
+  document.body.className = 'theme-' + name;
+  themes.forEach(t => document.getElementById('theme-' + t).classList.remove('active'));
+  document.getElementById('theme-' + name).classList.add('active');
+  localStorage.setItem('wo_theme', name);
+  // Re-render charts with new accent color
+  setTimeout(() => {
+    if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashChart();
+    if (document.getElementById('tab-change').classList.contains('active')) renderChange();
+  }, 100);
+  showToast('테마가 변경됐습니다');
+}
+
+/* ─────────────────────────────────────────
+   SAMPLE DATA
+───────────────────────────────────────── */
+function loadSampleData() {
+  records = [
+    { id:'s0', date:'2026-01-06T19:59', weight:75.7, skeletal_muscle:35.2, body_fat_pct:18.1, body_fat_kg:13.7, score:82, bmr:1743, bmi:23.9, visceral:5, whr:0.85, obesity:103 },
+    { id:'s1', date:'2026-02-05T19:59', weight:76.5, skeletal_muscle:35.9, body_fat_pct:17.4, body_fat_kg:13.3, score:82, bmr:1750, bmi:24.1, visceral:4, whr:0.84, obesity:104 },
+    { id:'s2', date:'2026-03-19T20:03', weight:76.9, skeletal_muscle:36.1, body_fat_pct:17.4, body_fat_kg:13.4, score:82, bmr:1755, bmi:24.3, visceral:5, whr:0.84, obesity:105 },
+    { id:'s3', date:'2026-04-05T14:30', weight:75.1, skeletal_muscle:34.4, body_fat_pct:19.2, body_fat_kg:14.4, score:78, bmr:1713, bmi:23.7, visceral:6, whr:0.86, obesity:102 },
+    { id:'s4', date:'2026-04-19T16:38', weight:74.5, skeletal_muscle:34.4, body_fat_pct:18.6, body_fat_kg:13.9, score:78, bmr:1721, bmi:23.5, visceral:5, whr:0.85, obesity:101 },
+    { id:'s5', date:'2026-05-02T17:16', weight:75.3, skeletal_muscle:35.3, body_fat_pct:17.5, body_fat_kg:13.2, score:81, bmr:1723, bmi:23.8, visceral:4, whr:0.84, obesity:102 },
+    { id:'s6', date:'2026-05-16T17:33', weight:74.8, skeletal_muscle:35.6, body_fat_pct:16.4, body_fat_kg:12.3, score:82, bmr:1723, bmi:23.6, visceral:4, whr:0.83, obesity:101 },
+    { id:'s7', date:'2026-05-24T16:57', weight:74.9, skeletal_muscle:35.6, body_fat_pct:16.4, body_fat_kg:12.3, score:82, bmr:1723, bmi:23.6, visceral:4, whr:0.83, obesity:107,
+      height:178, age:26, gender:'남성', water:45.9, protein:12.6, mineral:4.15, rec_cal:2803 }
+  ];
+  currentIdx = records.length - 1;
+  updateAll();
+  showToast('샘플 데이터 로드됨');
+}
+
+/* ─────────────────────────────────────────
+   UTILS
+───────────────────────────────────────── */
+function fmtDateShort(d) {
+  const dt = new Date(d);
+  return `${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function fmtDateFull(d) {
+  const dt = new Date(d);
+  const days = ['일','월','화','수','목','금','토'];
+  return `${String(dt.getFullYear()).slice(2)}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')} (${days[dt.getDay()]}) ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+}
+
+function emptyState(icon, title, sub) {
+  return `<div class="empty-state"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></div>`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || '처리 중...';
+  document.getElementById('loadingOverlay').classList.add('visible');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('visible');
+}
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore theme
+  const saved = localStorage.getItem('wo_theme');
+  if (saved) applyTheme(saved);
+
+  // Set default date
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('f_date').value = now.toISOString().slice(0,16);
+
+  // Firebase timeout check
+  setTimeout(() => {
+    if (!firebaseOK) {
+      document.getElementById('fbStatus').textContent = '연결 안됨 (로컬 모드)';
+    }
+  }, 5000);
+});
+</script>
+
+</body>
+</html>
