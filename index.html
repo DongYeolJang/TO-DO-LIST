@@ -96,8 +96,17 @@
 
 /* ── BASE ── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{height:100%;overflow:hidden;background:#0F0F14}
-body{font-family:'Inter','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;max-width:480px;margin:0 auto;height:100dvh;overflow:hidden}
+html{height:100%;height:-webkit-fill-available;background:#0F0F14}
+body{
+  font-family:'Inter','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;
+  max-width:480px;margin:0 auto;
+  height:100dvh;
+  min-height:-webkit-fill-available;
+  /* overflow은 body에서 제거 — iOS PWA에서 키보드 올라오는걸 막지 않도록 */
+  position:relative;
+}
 
 /* ── SPLASH ── */
 #splash{position:fixed;inset:0;z-index:999;background:#0F0F14;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease,transform .5s ease}
@@ -117,7 +126,17 @@ body{font-family:'Inter','Apple SD Gothic Neo','Malgun Gothic',sans-serif;backgr
 @keyframes dotPulse{0%,100%{background:#2E2E42}50%{background:#6C63FF}}
 
 /* ── LOGIN ── */
-#login-screen{position:fixed;inset:0;z-index:900;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px}
+#login-screen{
+  position:fixed;inset:0;z-index:900;
+  background:var(--bg);
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+  overflow-y:auto;           /* 키보드 올라왔을 때 스크롤 가능 */
+  -webkit-overflow-scrolling:touch;
+}
 #login-screen.show{display:flex;animation:fadeIn .3s ease}
 .login-logo{width:80px;height:80px;border-radius:22px;background:linear-gradient(135deg,#1A1A24,#222232);border:1px solid #2E2E42;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(108,99,255,.25);margin-bottom:24px}
 .login-logo svg{width:48px;height:48px}
@@ -136,7 +155,17 @@ body{font-family:'Inter','Apple SD Gothic Neo','Malgun Gothic',sans-serif;backgr
 @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── LAYOUT ── */
-#app-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--tab-h)+12px);scroll-behavior:smooth}
+#app-content{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; /* iOS momentum scroll */
+  overscroll-behavior-y:contain;
+  padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 12px);
+  scroll-behavior:smooth;
+  /* 높이를 명시해야 iOS PWA에서 스크롤 작동 */
+  min-height:0;
+}
 #app-content::-webkit-scrollbar{display:none}
 
 /* ── TAB BAR ── */
@@ -934,6 +963,30 @@ document.getElementById('modal-input').addEventListener('keydown', e=>{ if(e.key
 setTheme(state.theme || 'dark');
 updateDateLabel();
 renderHome();
+
+// ── iOS PWA 키보드 / 뷰포트 픽스 ──
+// iOS PWA에서 키보드 올라올 때 body 높이가 안 줄어드는 문제 대응
+(function() {
+  // visualViewport API 지원하는 경우 (iOS 13+)
+  if (window.visualViewport) {
+    var appContent = document.getElementById('app-content');
+    function onViewportResize() {
+      var vh = window.visualViewport.height;
+      document.body.style.height = vh + 'px';
+    }
+    window.visualViewport.addEventListener('resize', onViewportResize);
+    window.visualViewport.addEventListener('scroll', onViewportResize);
+  }
+
+  // input/textarea에 포커스 시 스크롤해서 보이게
+  document.addEventListener('focusin', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      setTimeout(function() {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 320);
+    }
+  });
+})();
 
 // Then boot Firebase
 initFirebase().catch(err => {
